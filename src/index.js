@@ -47,9 +47,9 @@ class Cloudflare {
 		return record;
 	}
 
-	async updateRecord(record, value) {
+	async updateRecord(zone, record, value) {
 		const response = await this._fetchWithToken(
-			`zones/${record.zone_id}/dns_records/${record.id}`,
+			`zones/${zone.id}/dns_records/${record.id}`,
 			{
 				method: "PATCH",
 				body: JSON.stringify({
@@ -173,7 +173,7 @@ async function informAPI(hostnames, ip, name, token) {
 
 		const zone = zones.get(domainName);
 		const record = await cloudflare.findRecord(zone, hostname, isIPV4);
-		await cloudflare.updateRecord(record, ip);
+		await cloudflare.updateRecord(zone, record, ip);;
 	}
 }
 
