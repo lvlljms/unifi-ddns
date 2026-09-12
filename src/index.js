@@ -40,19 +40,26 @@ class Cloudflare {
 	}
 
 	async updateRecord(record, value) {
-		record.content = value;
 		const response = await this._fetchWithToken(
 			`zones/${record.zone_id}/dns_records/${record.id}`,
 			{
-				method: "PUT",
-				body: JSON.stringify(record),
+				method: "PATCH",
+				body: JSON.stringify({
+					type: record.type,
+					name: record.name,
+					content: value,
+					ttl: record.ttl,
+					proxied: record.proxied,
+				}),
 			}
 		);
 		const body = await response.json();
 		if (!body.success) {
-			throw new CloudflareApiException("Failed to update dns record");
+			throw new CloudflareApiException(
+				`Failed to update dns record: ${JSON.stringify(body.errors)}`
+			);
 		}
-		return body.result[0];
+		return body.result;
 	}
 
 	async _fetchWithToken(endpoint, options = {}) {
