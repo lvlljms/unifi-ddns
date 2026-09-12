@@ -31,12 +31,20 @@ class Cloudflare {
 
 	async findRecord(zone, name, isIPV4 = true) {
 		const rrType = isIPV4 ? "A" : "AAAA";
-		const response = await this._fetchWithToken(`zones/${zone.id}/dns_records?name=${name}`);
+		const response = await this._fetchWithToken(
+			`zones/${zone.id}/dns_records?type=${rrType}&name.exact=${name}`
+		);
 		const body = await response.json();
 		if (!body.success || body.result.length === 0) {
-			throw new CloudflareApiException(`Failed to find dns record '${name}'`);
+			throw new CloudflareApiException(
+				`Failed to find dns record '${name}': ${JSON.stringify(body.errors)}`
+			);
 		}
-		return body.result?.filter(rr => rr.type === rrType)[0];
+		const record = body.result.find(rr => rr.type === rrType);
+		if (!record) {
+			throw new CloudflareApiException(`No ${rrType} record found for '${name}'`);
+		}
+		return record;
 	}
 
 	async updateRecord(record, value) {
